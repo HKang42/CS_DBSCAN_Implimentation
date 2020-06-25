@@ -33,10 +33,11 @@ loop through Array
 """
 
 class DBSCAN():
-    def __init__(self, epsilon, min_points, cluster = Cluster()):
+    def __init__(self, epsilon, min_points, cluster = Cluster(), noise = -1):
         self.epsilon = epsilon
         self.min_points = min_points
         self.cluster = cluster
+        self.noise = noise
 
     def get_distances(self, point, arr):
         """
@@ -111,13 +112,12 @@ class DBSCAN():
             if clusters.labels[i] != 0:
                 continue
 
-            # Get distances between point and all other points
-            # Function returns a tuple where the first element is an 
-            # array of distances and the second is the number of connections
-            distances = self.get_distances(point, arr)
+            # Get the number of points that are considered connected (within epsilon distance).
+            # If number is less than the min_point threshold, we label it as noise.
+            _, connections = self.get_distances(point, arr)
 
-            if distances[1] < self.min_points:
-                clusters.labels[i] = -1
+            if connections < self.min_points:
+                clusters.labels[i] = self.noise
                 continue
             
             else: 
@@ -129,6 +129,24 @@ class DBSCAN():
 
         self.cluster = clusters
         return self.cluster
+
+
+    def predict(self, input_point):
+        if self.cluster == Cluster():
+            raise ValueError(f"This DBSCAN instance is not fitted yet. Call 'fit' with appropriate arguments befure using 'predict'.")
+
+        # Generate the distance array and calculate number of connections
+        distances, connections = self.get_distances(input_point, self.cluster.data)
+
+        if connections < self.min_points:
+            return self.noise
+
+        # Loop through the distance matrix and grab the index of the first point that input_point is connected to.
+        # Return the label for the corresponding entry in the cluster labels.
+        for i in range(len(distances)):
+            if distances[i][1] == 1:
+                return self.cluster.labels[i]
+
 
     def __str__(self):
         """ Print cluster using the Cluster class's __str__ method. """
@@ -144,15 +162,25 @@ if __name__ == "__main__":
 
     epsilon = 3
     min_points = 4
-    output = DBSCAN(epsilon, min_points)
-    output.fit(Array)
-    print(output)
+    model = DBSCAN(epsilon, min_points)
+    model.fit(Array)
+    print(model)
 
-    # x, y = output.data[:,0], output.data[:,1]
+    # x, y = model.data[:,0], model.data[:,1]
     # plt.scatter(x,y)
     # plt.show()
 
-    q = output.cluster
+    q = model.cluster
 
     sns.scatterplot(x = q.data[:,0], y = q.data[:,1], hue = q.labels, palette=['green','orange','brown'])
     plt.show()
+
+
+    input = np.array([10,2])
+    result = model.predict(input)
+    print("Input:", input, "\tResult:", result)
+    #from sklearn.neighbors import KNeighborsClassifier
+
+    #n = KNeighborsClassifier(n_neighbors=3)
+    
+    #n.predict(Array)
