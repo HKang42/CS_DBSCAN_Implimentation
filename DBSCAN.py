@@ -8,6 +8,7 @@ Given some data set, Array, generate and return a model that clusters the points
 from Cluster_class import Cluster
 import numpy as np
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 
 """
@@ -31,119 +32,128 @@ loop through Array
         
 """
 
-def get_distances(point, arr, epsilon):
-    """
-    Given a point and an n x m array, calculate the distance between that point and every other point in the array
-    Record the distances in a new n x 2 array. 
-    [n, 0] contains the distance value. 
-    [n, 1] is 1 if the distance is less or equal to epsilon (is a connection) and 0 otherwise.
+class DBSCAN():
+    def __init__(self, cluster = Cluster()):
+        self.cluster = cluster
 
-    Returns a tuple where the first entry is the array of distances and the second is the number of connections
-    """
-    distances = np.zeros((len(arr), 2))
-    neighbor = 0
-    for i in range(len(arr)):
-        #print("a", point, "b",arr[i], "c",np.linalg.norm(point - arr[i]))
-        dist = np.linalg.norm(point - arr[i])
-        distances[i, 0] = dist
+    def get_distances(self, point, arr, epsilon):
+        """
+        Given a point and an n x m array, calculate the distance between that point and every other point in the array
+        Record the distances in a new n x 2 array. 
+        [n, 0] contains the distance value. 
+        [n, 1] is 1 if the distance is less or equal to epsilon (is a connection) and 0 otherwise.
+
+        Returns a tuple where the first entry is the array of distances and the second is the number of connections
+        """
+        distances = np.zeros((len(arr), 2))
+        neighbor = 0
+        for i in range(len(arr)):
+            #print("a", point, "b",arr[i], "c",np.linalg.norm(point - arr[i]))
+            dist = np.linalg.norm(point - arr[i])
+            distances[i, 0] = dist
+            
+            if dist <= epsilon:
+                distances[i, 1] = 1
+                neighbor += 1
+
+        return distances, neighbor
+
+
+    def create_cluster(self, point, arr, epsilon, min_points, cluster, c):
+        """
+        Recursively grow a cluster given a starting point, an array, a max distances, and a minimum number of points.
+        Modifies the input cluster object by setting all points within the cluster to c.
+        """
+        distances, connections = self.get_distances(point, arr, epsilon)
+
+
+        # Every time we call this function, we add the point to the cluster
+        cluster.set_label(point, c)
+
+
+        # Recursion base case, we have run out of connecting points (reach a terminating point/leaf)
+        if connections == 0:
+            return 
+
+        # If we are not at base case:
+        # Continue jumping to connecting points and labeling c.
+        # Each time we jump, we shorten the input array by
+        # removing the connecting points from the input array.
+
+
+        # Filter the array down to only connecting points
+        # We use the fact that the indices for arr and distances correpsond to the same points
+        connecting_points = arr[ distances[:,1]==1 ]
+
+
+        # We generate the new input array.
+        # This is the array of points minus the connecting points (includes the original point itself)
+        # We must subtract all connecting points instead of just the inpout point to prevent points from 
+        # connecting back and forth with each other
+        new_arr = arr[ distances[:,1]==0 ]
+
+
+        for p in connecting_points:
+            
+            self.create_cluster(p, new_arr, epsilon, min_points, cluster, c)
+            
+        return None
+
+
+    def fit(self, arr, min_points, epsilon):
+
+        clusters = Cluster(Array)
+        Cluster_num = 0
         
-        if dist <= epsilon:
-            distances[i, 1] = 1
-            neighbor += 1
+        for i, point in enumerate(arr):
+            
+            # If the point has already been assigned a cluster, skip it
+            if clusters.labels[i] != 0:
+                continue
 
-    return distances, neighbor
+            # Get distances between point and all other points
+            # Function returns a tuple where the first element is an 
+            # array of distances and the second is the number of connections
+            distances = self.get_distances(point, arr, epsilon)
 
+            if distances[1] < min_points:
+                clusters.labels[i] = -1
+                continue
+            
+            else: 
+                clusters.labels[i] = Cluster_num
+                Cluster_num += 1
 
-def create_cluster(point, arr, epsilon, min_points, cluster, c):
-    """
-    Recursively grow a cluster given a starting point, an array, a max distances, and a minimum number of points.
-    Modifies the input cluster object by setting all points within the cluster to c.
-    """
-    distances, connections = get_distances(point, arr, epsilon)
+                # create cluster starting from the given point
+                self.create_cluster(point, arr, epsilon, min_points, clusters, Cluster_num)
 
+        self.cluster = clusters
+        return self.cluster
 
-    # Every time we call this function, we add the point to the cluster
-    cluster.set_label(point, c)
+    def __str__(self):
+        """ Print cluster using the Cluster class's __str__ method. """
+        return self.cluster.__str__()
 
+if __name__ == "__main__": 
 
-    # Recursion base case, we have run out of connecting points (reach a terminating point/leaf)
-    if connections == 0:
-        return 
+    Array = np.array([[0,0], [0,1], [0,2], [1,1], [5,1], [9,1], [10,0], [10,1], [10,2]])
 
-    # If we are not at base case:
-    # Continue jumping to connecting points and labeling c.
-    # Each time we jump, we shorten the input array by
-    # removing the connecting points from the input array.
-
-
-    # Filter the array down to only connecting points
-    # We use the fact that the indices for arr and distances correpsond to the same points
-    connecting_points = arr[ distances[:,1]==1 ]
-
-
-    # We generate the new input array.
-    # This is the array of points minus the connecting points (includes the original point itself)
-    # We must subtract all connecting points instead of just the inpout point to prevent points from 
-    # connecting back and forth with each other
-    new_arr = arr[ distances[:,1]==0 ]
+    # x, y= Array[:,0], Array[:,1]
+    # plt.scatter(x,y)
+    # plt.show()
 
 
-    for p in connecting_points:
-        
-        create_cluster(p, new_arr, epsilon, min_points, cluster, c)
-        
-    return None
+    min_points = 4
+    epsilon = 3
+    output = DBSCAN()
+    output.fit(Array, min_points, epsilon)
+    print(output)
 
+    # x, y = output.data[:,0], output.data[:,1]
+    # plt.scatter(x,y)
+    # plt.show()
 
-def DBSCAN(arr, min_points, epsilon):
+    q = output.cluster
 
-    clusters = Cluster(Array)
-    Cluster_num = 0
-    
-    for i, point in enumerate(arr):
-        
-        # If the point has already been assigned a cluster, skip it
-        if clusters.labels[i] != 0:
-            continue
-
-        # Get distances between point and all other points
-        # Function returns a tuple where the first element is an 
-        # array of distances and the second is the number of connections
-        distances = get_distances(point, arr, epsilon)
-
-        if distances[1] < min_points:
-            clusters.labels[i] = "N"
-            continue
-        
-        else: 
-            clusters.labels[i] = Cluster_num
-            Cluster_num += 1
-
-            # create cluster starting from the given point
-            create_cluster(point, arr, epsilon, min_points, clusters, Cluster_num)
-
-    return clusters
-
-
-
-# Array = np.array([[0,0], [0,1], [0,2], [1,1], [5,1], [9,1], [10,0], [10,1], [10,2]])
-# clusters = Cluster(Array)
-
-# clusters[0] = clusters[5]
-
-# q = create_cluster(clusters.data[5], clusters.data, 3, 4, clusters, 'Q')
-# print(q)
-# print(clusters)
-
-
-Array = np.array([[0,0], [0,1], [0,2], [1,1], [5,1], [9,1], [10,0], [10,1], [10,2]])
-
-# x, y= Array[:,0], Array[:,1]
-# plt.scatter(x,y)
-# plt.show()
-
-
-min_points = 4
-epsilon = 3
-output = DBSCAN(Array, min_points, epsilon)
-print(output)
+    sns.scatterplot(x = q.data[:,0], y = q.data[:,1], hue = q.labels, palette=['green','orange','brown'])
+    plt.show()

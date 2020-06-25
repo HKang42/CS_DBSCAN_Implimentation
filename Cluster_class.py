@@ -3,12 +3,13 @@ import numpy as np
 class Cluster():
     def __init__(self, data = None, labels = None, index = None):
         self.data = data
-        if self.data.all() == None:
+        if type(self.data) is np.ndarray:
+            self.labels = [0] * len(self.data)
+            self.index = [i for i in range(0, len(data))]
+        
+        else: 
             self.data = np.array([])
         
-        self.labels = [0] * len(self.data)
-
-        self.index = [i for i in range(0, len(data))]
 
     def __str__(self):
         print_str = "{:>5}{:>12}{:>11}\n".format("Index", "Value", "Label")
