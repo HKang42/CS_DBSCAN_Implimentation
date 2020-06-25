@@ -33,10 +33,12 @@ loop through Array
 """
 
 class DBSCAN():
-    def __init__(self, cluster = Cluster()):
+    def __init__(self, epsilon, min_points, cluster = Cluster()):
+        self.epsilon = epsilon
+        self.min_points = min_points
         self.cluster = cluster
 
-    def get_distances(self, point, arr, epsilon):
+    def get_distances(self, point, arr):
         """
         Given a point and an n x m array, calculate the distance between that point and every other point in the array
         Record the distances in a new n x 2 array. 
@@ -52,24 +54,22 @@ class DBSCAN():
             dist = np.linalg.norm(point - arr[i])
             distances[i, 0] = dist
             
-            if dist <= epsilon:
+            if dist <= self.epsilon:
                 distances[i, 1] = 1
                 neighbor += 1
 
         return distances, neighbor
 
 
-    def create_cluster(self, point, arr, epsilon, min_points, cluster, c):
+    def create_cluster(self, point, arr, cluster, c):
         """
         Recursively grow a cluster given a starting point, an array, a max distances, and a minimum number of points.
         Modifies the input cluster object by setting all points within the cluster to c.
         """
-        distances, connections = self.get_distances(point, arr, epsilon)
-
+        distances, connections = self.get_distances(point, arr)
 
         # Every time we call this function, we add the point to the cluster
         cluster.set_label(point, c)
-
 
         # Recursion base case, we have run out of connecting points (reach a terminating point/leaf)
         if connections == 0:
@@ -83,24 +83,24 @@ class DBSCAN():
 
         # Filter the array down to only connecting points
         # We use the fact that the indices for arr and distances correpsond to the same points
-        connecting_points = arr[ distances[:,1]==1 ]
+        connecting_points = arr[ distances[:,1] == 1 ]
 
 
         # We generate the new input array.
         # This is the array of points minus the connecting points (includes the original point itself)
         # We must subtract all connecting points instead of just the inpout point to prevent points from 
         # connecting back and forth with each other
-        new_arr = arr[ distances[:,1]==0 ]
+        new_arr = arr[ distances[:,1] == 0 ]
 
 
         for p in connecting_points:
             
-            self.create_cluster(p, new_arr, epsilon, min_points, cluster, c)
+            self.create_cluster(p, new_arr, cluster, c)
             
         return None
 
 
-    def fit(self, arr, min_points, epsilon):
+    def fit(self, arr):
 
         clusters = Cluster(Array)
         Cluster_num = 0
@@ -114,9 +114,9 @@ class DBSCAN():
             # Get distances between point and all other points
             # Function returns a tuple where the first element is an 
             # array of distances and the second is the number of connections
-            distances = self.get_distances(point, arr, epsilon)
+            distances = self.get_distances(point, arr)
 
-            if distances[1] < min_points:
+            if distances[1] < self.min_points:
                 clusters.labels[i] = -1
                 continue
             
@@ -125,7 +125,7 @@ class DBSCAN():
                 Cluster_num += 1
 
                 # create cluster starting from the given point
-                self.create_cluster(point, arr, epsilon, min_points, clusters, Cluster_num)
+                self.create_cluster(point, arr, clusters, Cluster_num)
 
         self.cluster = clusters
         return self.cluster
@@ -142,11 +142,10 @@ if __name__ == "__main__":
     # plt.scatter(x,y)
     # plt.show()
 
-
-    min_points = 4
     epsilon = 3
-    output = DBSCAN()
-    output.fit(Array, min_points, epsilon)
+    min_points = 4
+    output = DBSCAN(epsilon, min_points)
+    output.fit(Array)
     print(output)
 
     # x, y = output.data[:,0], output.data[:,1]
