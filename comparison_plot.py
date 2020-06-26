@@ -1,5 +1,4 @@
 import time
-import warnings
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -17,7 +16,7 @@ np.random.seed(0)
 # Generate datasets. We choose the size big enough to see the scalability
 # of the algorithms, but not too big to avoid too long running times
 # ============
-n_samples = 20
+n_samples = 100
 noisy_circles = datasets.make_circles(n_samples=n_samples, factor=.5,
                                       noise=.05)
 noisy_moons = datasets.make_moons(n_samples=n_samples, noise=.05)

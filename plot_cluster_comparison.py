@@ -63,7 +63,7 @@ varied = datasets.make_blobs(n_samples=n_samples,
 # ============
 # Set up cluster parameters
 # ============
-plt.figure(figsize=(9 * 2 + 3, 12.5))
+plt.figure(figsize=(14, 12.5))
 plt.subplots_adjust(left=.02, right=.98, bottom=.001, top=.96, wspace=.05,
                     hspace=.01)
 
@@ -116,7 +116,7 @@ for i_dataset, (dataset, algo_params) in enumerate(datasets):
     
     # ms = cluster.MeanShift(bandwidth=bandwidth, bin_seeding=True)
 
-    # two_means = cluster.MiniBatchKMeans(n_clusters=params['n_clusters'])
+    two_means = cluster.MiniBatchKMeans(n_clusters=params['n_clusters'])
 
     # ward = cluster.AgglomerativeClustering(
     #     n_clusters=params['n_clusters'], linkage='ward',
@@ -138,21 +138,48 @@ for i_dataset, (dataset, algo_params) in enumerate(datasets):
     #     n_components=params['n_clusters'], covariance_type='full')
 
     clustering_algorithms = (
-        #('MiniBatchKMeans', two_means),
+        ("Unclustered", dbscan),
+        ('K-Means', two_means),
         #('AffinityPropagation', affinity_propagation),
         #('MeanShift', ms),
         #('SpectralClustering', spectral),
         #('Ward', ward),
         #('AgglomerativeClustering', average_linkage),
-        ('DBSCAN', dbscan),
+        #('DBSCAN', dbscan),
         #('OPTICS', optics),
         #('Birch', birch),
         #('GaussianMixture', gmm)
     )
 
     for name, algorithm in clustering_algorithms:
-        t0 = time.time()
+        
 
+        if name == "Unclustered":
+    
+
+            plt.subplot(len(datasets), len(clustering_algorithms), plot_num)
+
+            print(len(datasets), len(clustering_algorithms), plot_num)
+
+            if i_dataset == 0:
+                plt.title("Unclustered", size=18)
+
+            colors = np.array(list(islice(cycle(['#000000', '#000000', '#000000',
+                                                '#000000', '#000000', '#000000',
+                                                '#000000', '#000000', '#000000']),
+                                        int(5))))
+            # add black color for outliers (if any)
+            
+            plt.scatter(X[:, 0], X[:, 1], s=10, color='#000000')
+
+            plt.xlim(-2.5, 2.5)
+            plt.ylim(-2.5, 2.5)
+            plt.xticks(())
+            plt.yticks(())
+            plot_num += 1
+            continue
+
+        t0 = time.time()
         # catch warnings related to kneighbors_graph
         with warnings.catch_warnings():
             warnings.filterwarnings(
@@ -171,8 +198,8 @@ for i_dataset, (dataset, algo_params) in enumerate(datasets):
         t1 = time.time()
         if hasattr(algorithm, 'labels_'):
             y_pred = algorithm.labels_.astype(np.int)
-        #else:
-            #y_pred = algorithm.predict(X)
+        else:
+            y_pred = algorithm.predict(X)
 
         plt.subplot(len(datasets), len(clustering_algorithms), plot_num)
 
@@ -193,9 +220,9 @@ for i_dataset, (dataset, algo_params) in enumerate(datasets):
         plt.ylim(-2.5, 2.5)
         plt.xticks(())
         plt.yticks(())
-        plt.text(.99, .01, ('%.2fs' % (t1 - t0)).lstrip('0'),
-                 transform=plt.gca().transAxes, size=15,
-                 horizontalalignment='right')
+        # plt.text(.99, .01, ('%.2fs' % (t1 - t0)).lstrip('0'),
+        #          transform=plt.gca().transAxes, size=15,
+        #          horizontalalignment='right')
         plot_num += 1
 
 plt.show()
