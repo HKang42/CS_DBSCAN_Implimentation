@@ -63,7 +63,7 @@ varied = datasets.make_blobs(n_samples=n_samples,
 # ============
 # Set up cluster parameters
 # ============
-plt.figure(figsize=(14, 12.5))
+plt.figure(figsize=(6, 8))
 plt.subplots_adjust(left=.02, right=.98, bottom=.001, top=.96, wspace=.05,
                     hspace=.01)
 
@@ -145,7 +145,7 @@ for i_dataset, (dataset, algo_params) in enumerate(datasets):
         #('SpectralClustering', spectral),
         #('Ward', ward),
         #('AgglomerativeClustering', average_linkage),
-        #('DBSCAN', dbscan),
+        ('DBSCAN', dbscan),
         #('OPTICS', optics),
         #('Birch', birch),
         #('GaussianMixture', gmm)

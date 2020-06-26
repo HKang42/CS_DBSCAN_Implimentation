@@ -38,7 +38,7 @@ varied = datasets.make_blobs(n_samples=n_samples,
 # ============
 # Set up cluster parameters
 # ============
-plt.figure(figsize=(10, 10))
+plt.figure(figsize=(4, 8))
 plt.subplots_adjust(left=.02, right=.98, bottom=.001, top=.96, wspace=.05,
                     hspace=.01)
 
@@ -64,16 +64,18 @@ for dataset in datasets:
     X = StandardScaler().fit_transform(X)
 
     if dataset is varied:
-        eps = default_epsilon
+        eps = varied_eps
     elif dataset is aniso:
         eps = aniso_eps
     else:
         eps = default_epsilon
 
-
+    eps = eps * 1.1 
 ### My DBSCAN
 
-    model = DBSCAN(eps)
+    model = DBSCAN(eps, 4)
+
+    #print(model.epsilon)
 
     t0 = time.time()
 
@@ -93,7 +95,7 @@ for dataset in datasets:
 
     plt.subplot(len(datasets), 2, plot_num)
     if i < 2:
-        plt.title("Mine", size = 18)
+        plt.title("Basic", size = 18)
 
     plt.scatter(X[:, 0], X[:, 1], s=10, color=colors[y_pred])
     plt.xlim(-2.5, 2.5)
@@ -109,7 +111,7 @@ for dataset in datasets:
 
     ### SKlearn DBSCAN
 
-    dbscan = cluster.DBSCAN(eps = eps)
+    dbscan = cluster.DBSCAN(eps = eps, min_samples=4) #,metric='euclidean', algorithm = 'brute', p=2)
 
     t0 = time.time()
 

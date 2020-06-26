@@ -48,18 +48,24 @@ class DBSCAN():
 
         Returns a tuple where the first entry is the array of distances and the second is the number of connections
         """
+        # Create an empty array with the same number of rows as our input array.
+        # The first row entry will contain the distance between the input point and all other points.
+        # The second row entry is 0 if the point is not a neighbor or 1 if it is.
         distances = np.zeros((len(arr), 2))
-        neighbor = 0
+        neighbors = 0
+
         for i in range(len(arr)):
-            #print("a", point, "b",arr[i], "c",np.linalg.norm(point - arr[i]))
+
+            # calculate distance and store it in the array
             dist = np.linalg.norm(point - arr[i])
             distances[i, 0] = dist
             
+            # Mark the point as a neighbor if it's within epsilon distance
             if dist <= self.epsilon:
                 distances[i, 1] = 1
-                neighbor += 1
+                neighbors += 1
 
-        return distances, neighbor
+        return distances, neighbors
 
 
     def create_cluster(self, point, arr, cluster, c):
@@ -77,15 +83,13 @@ class DBSCAN():
             return 
 
         # If we are not at base case:
-        # Continue jumping to connecting points and labeling c.
+        # Continue jumping to connecting points and labeling them c.
         # Each time we jump, we shorten the input array by
         # removing the connecting points from the input array.
-
 
         # Filter the array down to only connecting points
         # We use the fact that the indices for arr and distances correpsond to the same points
         connecting_points = arr[ distances[:,1] == 1 ]
-
 
         # We generate the new input array.
         # This is the array of points minus the connecting points (includes the original point itself)
@@ -93,7 +97,7 @@ class DBSCAN():
         # connecting back and forth with each other
         new_arr = arr[ distances[:,1] == 0 ]
 
-
+        # For each connecting point, we recursively call this method to expand the cluster
         for p in connecting_points:
             
             self.create_cluster(p, new_arr, cluster, c)
@@ -102,32 +106,36 @@ class DBSCAN():
 
 
     def fit(self, arr):
+        """
+        Fit an array of data points on our DBSCAN object. Stores data points and assigns each point
+        a cluster label or noise label using the DBSCAN algorithm.
+        """
 
-        clusters = Cluster(arr)
+        self.cluster = Cluster(arr)
         Cluster_num = 1
         
         for i, point in enumerate(arr):
             
             # If the point has already been assigned a cluster or marked as noise, skip it
-            if clusters.labels[i] != 0:
+            if self.cluster.labels[i] != 0:
                 continue
 
             # Get the number of points that are considered connected (within epsilon distance).
-            # If number is less than the min_point threshold, we label it as noise.
             _, connections = self.get_distances(point, arr)
 
+            # If number is less than the min_point threshold, we label it as noise.
             if connections < self.min_points:
-                clusters.labels[i] = self.noise
+                self.cluster.labels[i] = self.noise
                 continue
             
+            # If number is greater than or equal to the threshold, we grow a cluster.
             else: 
-                clusters.labels[i] = Cluster_num
+                self.cluster.labels[i] = Cluster_num
                 Cluster_num += 1
 
                 # create cluster starting from the given point
-                self.create_cluster(point, arr, clusters, Cluster_num)
-
-        self.cluster = clusters
+                self.create_cluster(point, arr, self.cluster, Cluster_num)
+        
         return self
 
 
