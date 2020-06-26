@@ -33,7 +33,7 @@ loop through Array
 """
 
 class DBSCAN():
-    def __init__(self, epsilon, min_points, cluster = Cluster(), noise = -1):
+    def __init__(self, epsilon=0.5, min_points=5, cluster = Cluster(), noise = -1):
         self.epsilon = epsilon
         self.min_points = min_points
         self.cluster = cluster
@@ -103,12 +103,12 @@ class DBSCAN():
 
     def fit(self, arr):
 
-        clusters = Cluster(Array)
-        Cluster_num = 0
+        clusters = Cluster(arr)
+        Cluster_num = 1
         
         for i, point in enumerate(arr):
             
-            # If the point has already been assigned a cluster, skip it
+            # If the point has already been assigned a cluster or marked as noise, skip it
             if clusters.labels[i] != 0:
                 continue
 
@@ -128,7 +128,7 @@ class DBSCAN():
                 self.create_cluster(point, arr, clusters, Cluster_num)
 
         self.cluster = clusters
-        return self.cluster
+        return self
 
 
     def predict(self, input_point):
@@ -152,6 +152,7 @@ class DBSCAN():
         """ Print cluster using the Cluster class's __str__ method. """
         return self.cluster.__str__()
 
+
 if __name__ == "__main__": 
 
     Array = np.array([[0,0], [0,1], [0,2], [1,1], [5,1], [9,1], [10,0], [10,1], [10,2]])
@@ -170,15 +171,17 @@ if __name__ == "__main__":
     # plt.scatter(x,y)
     # plt.show()
 
-    q = model.cluster
 
-    sns.scatterplot(x = q.data[:,0], y = q.data[:,1], hue = q.labels, palette=['green','orange','brown'])
-    plt.show()
+    # q = model.cluster
+    # sns.scatterplot(x = q.data[:,0], y = q.data[:,1], hue = q.labels, palette=['green','orange','brown'])
+    # plt.show()
 
 
     input = np.array([10,2])
     result = model.predict(input)
     print("Input:", input, "\tResult:", result)
+
+
     #from sklearn.neighbors import KNeighborsClassifier
 
     #n = KNeighborsClassifier(n_neighbors=3)

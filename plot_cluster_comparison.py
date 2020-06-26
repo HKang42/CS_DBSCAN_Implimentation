@@ -22,7 +22,7 @@ While these examples give some intuition about the
 algorithms, this intuition might not apply to very high
 dimensional data.
 """
-print(__doc__)
+#print(__doc__)
 
 import time
 import warnings
@@ -101,50 +101,53 @@ for i_dataset, (dataset, algo_params) in enumerate(datasets):
     # normalize dataset for easier parameter selection
     X = StandardScaler().fit_transform(X)
 
-    # estimate bandwidth for mean shift
-    bandwidth = cluster.estimate_bandwidth(X, quantile=params['quantile'])
+    # # estimate bandwidth for mean shift
+    # bandwidth = cluster.estimate_bandwidth(X, quantile=params['quantile'])
 
-    # connectivity matrix for structured Ward
-    connectivity = kneighbors_graph(
-        X, n_neighbors=params['n_neighbors'], include_self=False)
-    # make connectivity symmetric
-    connectivity = 0.5 * (connectivity + connectivity.T)
+    # # connectivity matrix for structured Ward
+    # connectivity = kneighbors_graph(
+    #     X, n_neighbors=params['n_neighbors'], include_self=False)
+    # # make connectivity symmetric
+    # connectivity = 0.5 * (connectivity + connectivity.T)
 
     # ============
     # Create cluster objects
     # ============
-    ms = cluster.MeanShift(bandwidth=bandwidth, bin_seeding=True)
-    two_means = cluster.MiniBatchKMeans(n_clusters=params['n_clusters'])
-    ward = cluster.AgglomerativeClustering(
-        n_clusters=params['n_clusters'], linkage='ward',
-        connectivity=connectivity)
-    spectral = cluster.SpectralClustering(
-        n_clusters=params['n_clusters'], eigen_solver='arpack',
-        affinity="nearest_neighbors")
+    
+    # ms = cluster.MeanShift(bandwidth=bandwidth, bin_seeding=True)
+
+    # two_means = cluster.MiniBatchKMeans(n_clusters=params['n_clusters'])
+
+    # ward = cluster.AgglomerativeClustering(
+    #     n_clusters=params['n_clusters'], linkage='ward',
+    #     connectivity=connectivity)
+    # spectral = cluster.SpectralClustering(
+    #     n_clusters=params['n_clusters'], eigen_solver='arpack',
+    #     affinity="nearest_neighbors")
     dbscan = cluster.DBSCAN(eps=params['eps'])
-    optics = cluster.OPTICS(min_samples=params['min_samples'],
-                            xi=params['xi'],
-                            min_cluster_size=params['min_cluster_size'])
-    affinity_propagation = cluster.AffinityPropagation(
-        damping=params['damping'], preference=params['preference'])
-    average_linkage = cluster.AgglomerativeClustering(
-        linkage="average", affinity="cityblock",
-        n_clusters=params['n_clusters'], connectivity=connectivity)
-    birch = cluster.Birch(n_clusters=params['n_clusters'])
-    gmm = mixture.GaussianMixture(
-        n_components=params['n_clusters'], covariance_type='full')
+    # optics = cluster.OPTICS(min_samples=params['min_samples'],
+    #                         xi=params['xi'],
+    #                         min_cluster_size=params['min_cluster_size'])
+    # affinity_propagation = cluster.AffinityPropagation(
+    #     damping=params['damping'], preference=params['preference'])
+    # average_linkage = cluster.AgglomerativeClustering(
+    #     linkage="average", affinity="cityblock",
+    #     n_clusters=params['n_clusters'], connectivity=connectivity)
+    # birch = cluster.Birch(n_clusters=params['n_clusters'])
+    # gmm = mixture.GaussianMixture(
+    #     n_components=params['n_clusters'], covariance_type='full')
 
     clustering_algorithms = (
-        ('MiniBatchKMeans', two_means),
-        ('AffinityPropagation', affinity_propagation),
-        ('MeanShift', ms),
-        ('SpectralClustering', spectral),
-        ('Ward', ward),
-        ('AgglomerativeClustering', average_linkage),
+        #('MiniBatchKMeans', two_means),
+        #('AffinityPropagation', affinity_propagation),
+        #('MeanShift', ms),
+        #('SpectralClustering', spectral),
+        #('Ward', ward),
+        #('AgglomerativeClustering', average_linkage),
         ('DBSCAN', dbscan),
-        ('OPTICS', optics),
-        ('Birch', birch),
-        ('GaussianMixture', gmm)
+        #('OPTICS', optics),
+        #('Birch', birch),
+        #('GaussianMixture', gmm)
     )
 
     for name, algorithm in clustering_algorithms:
@@ -168,10 +171,13 @@ for i_dataset, (dataset, algo_params) in enumerate(datasets):
         t1 = time.time()
         if hasattr(algorithm, 'labels_'):
             y_pred = algorithm.labels_.astype(np.int)
-        else:
-            y_pred = algorithm.predict(X)
+        #else:
+            #y_pred = algorithm.predict(X)
 
         plt.subplot(len(datasets), len(clustering_algorithms), plot_num)
+
+        print(len(datasets), len(clustering_algorithms), plot_num)
+
         if i_dataset == 0:
             plt.title(name, size=18)
 
